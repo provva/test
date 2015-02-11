@@ -1,0 +1,366 @@
+<html>
+<head>
+    <title>Slot Macine</title>
+    <script type="text/JavaScript" src="UpDate.js"></script>
+    <style type="text/css">
+        div#container_center { /* DIV IN centro pagina*/
+            position:absolute;
+            top:40%;
+            left:50%;
+            width:370px;
+            height:400px;
+            margin-left:-275px;
+            margin-top: -200px;
+            color:#000;
+            font-weight:bold;
+            padding:0;
+            background-color:#fff;
+        }
+        .TestoCentro {
+            text-align:center;
+        }
+    </style>
+    <script type="text/javascript">
+        // DICHIARAZIONE VALIABILI
+        var crediti = 50;               // Soldi che si gioca
+        var incasso = 0;                // partite fatte
+        var figure = new Array();       // Figure che verrano visualizate
+        var MontePremi = new Array();   // Ceediti che si vincono
+        var vincite = 0;                // vincite totali
+        var v1 = 0;
+        var v2 = 0;
+        var v3 = 0;
+        var i = 0;
+        var time = new Object;          // oggeto del timer 
+        var sicurezza = false;          // Sistema di sicurezza in caso che il progamma si bloca
+        var maxPartite = 100;           // Imposta il massimo di partite che si possono giocare
+        var playlist = new Array();     // Crea un vettore contente tutto l audio
+        var moneta = 1;                 // Indica quanto si spende quando si fa una nuova parita
+        var UltimaVincita = 0;          // Indica quante paritte sono state fatte dopo l'ultima vicnicta 
+
+
+        playlist['beep'] = new Audio('beep.mp3');
+        playlist['vincita'] = new Audio('vincita.mp3');
+        playlist['perdi'] = new Audio('perdi.mp3');
+
+        figure[0] = 'boot.jpg';
+        figure[1] = 'arancia.jpg';
+        figure[2] = 'prugna.jpg';
+        figure[3] = 'uva.jpg';
+        figure[4] = 'campana.jpg';
+        figure[5] = 'bar.png';
+        figure[6] = 'sette.png';
+
+        figure[7] = 'arancia.jpg';
+        figure[8] = 'prugna.jpg';
+
+        figure[9] = 'boot.jpg';
+        figure[10] = 'arancia.jpg';
+        figure[11] = 'prugna.jpg';
+        figure[12] = 'uva.jpg';
+        figure[13] = 'campana.jpg';
+        figure[14] = 'bar.png';
+        figure[15] = 'sette.png';
+        figure[16] = 'end.jpg';
+
+        // indice dei montepremi corispnde al indice delle figure 
+        MontePremi[0] = 50;
+        MontePremi[1] = 10;
+        MontePremi[2] = 12;
+        MontePremi[3] = 15;
+        MontePremi[4] = 20;
+        MontePremi[5] = 25;
+        MontePremi[6] = 30;
+        MontePremi[16] = -150;
+        
+        function boot() {
+            ScrivoCrediti(0);
+            CreaBody(0, 0, 0);
+            ComantiDisabilitati(false);
+            //Se il Boswer ha salvato qualche dato li ricarica 
+            var t = parseInt( f1.txtPartita.value) 
+            if (t != 0 && !isNaN(t)) { incasso = t; }
+            else { incasso = 0; }
+            f1.txtPartita.value = incasso;
+
+            t = parseInt(f1.txtTotVincite.value);
+            if (t != 0 && !isNaN(t)) { vincite = t; }
+            else { vincite = 0; }
+            f1.txtTotVincite.value = vincite;
+
+            //Verifico gli anni del utete e caricco i crediti
+            var anni = parseInt(prompt('Inserire gli Anni', 18));
+            if (anni < 18 || isNaN(anni)) { err('IL GIOCO E VIETATO AI MINORI','Err0'); }
+            else {
+                if (anni > 100) { err('ERRORE : sei troppo vecchio per questo gioco', 'Err1'); }
+                else {
+                    var x = false
+                    do {
+                        if (x == true) { window.alert('ERROR : inserire un numero tra 50 e 300 - Err2'); }
+                        x = true;
+                        crediti = parseInt(prompt('Inserire i numero di crediti da 50 a un massimo di 300', 50));
+			f1.txt_crediti.value = crediti;
+                    } while (isNaN(crediti) || crediti > 300 || crediti < 50)
+                    window.alert("!! ATTENZIONE !! \n il gioco può provocare dipendenza\nGioca senza esagerare");
+                }
+            }
+        }
+
+        // Avvio la pratita FUNZIONE 1 DI 3
+        function giro() {
+            ComantiDisabilitati(true);
+            if (sicurezza == false) {
+                if (UltimaVincita > 10 && Math.round(3 * Math.random()) == 2 && f1.vincitaPuls.checked==true) {
+                    var n = figure.length - 1;
+                    v1 = Math.round(n * Math.random());
+                    CreaBody(v1, v1, v1);
+                    v2 = v1;
+                    v3 = v1;
+                    soldi();
+                } else {
+                    UltimaVincita++;
+                    playAudio('beep');
+                    i = 0;
+                    incasso++;
+                    f1.txtPartita.value = incasso;
+                    if (incasso >= maxPartite) {
+                        sicurezza = true;
+                        err('Massime partite raggiunto', 'Err4');
+                    } else {
+                        f1.leva.value = 0;
+                        if (f1.vincitaPuls.checked == true) { ScrivoCrediti(-2); }
+                        else { ScrivoCrediti(-1); }
+                        Calcolo();
+                        time = setInterval(Calcolo, 5);
+                    }
+                }   //end VincitaPlus
+            }   // end sicuriezza
+        }// edn fuction
+
+        
+        // COntolla se ce qualche vincita FUNZIONE 3 DI 3
+        function soldi() {
+            // aranca e prubne sono doppie e quindi li prto a 1 
+            var da;     // valore uscito
+            var a;      // numero equivalente
+
+            da = 7; a = 1; if (v1 == da) { v1 = a; } if (v2 == da) { v2 = a; } if (v3 == da) { v3 = a; }
+            da = 8; a = 2; if (v1 == da) { v1 = a; } if (v2 == da) { v2 = a; } if (v3 == da) { v3 = a; }
+            
+            // VincitaPlus
+            da = 9; a = 0; if (v1 == da) { v1 = a; } if (v2 == da) { v2 = a; } if (v3 == da) { v3 = a; }
+            da = 10; a = 1; if (v1 == da) { v1 = a; } if (v2 == da) { v2 = a; } if (v3 == da) { v3 = a; }
+            da = 11; a = 2; if (v1 == da) { v1 = a; } if (v2 == da) { v2 = a; } if (v3 == da) { v3 = a; }
+            da = 12; a = 3; if (v1 == da) { v1 = a; } if (v2 == da) { v2 = a; } if (v3 == da) { v3 = a; }
+            da = 13; a = 4; if (v1 == da) { v1 = a; } if (v2 == da) { v2 = a; } if (v3 == da) { v3 = a; }
+            da = 14; a = 5; if (v1 == da) { v1 = a; } if (v2 == da) { v2 = a; } if (v3 == da) { v3 = a; }
+            da = 15; a = 6; if (v1 == da) { v1 = a; } if (v2 == da) { v2 = a; } if (v3 == da) { v3 = a; }
+
+            if (v1 == v2 && v2 == v3 && v1 == v3 && v1 != 16) {
+                playAudio('vincita');
+                window.alert("Complimento hai vinto " + MontePremi[v1] + " crediti");
+                ScrivoCrediti(MontePremi[v1]);
+                vincite = vincite + MontePremi[v1];
+                UltimaVincita = 0;
+            }
+            if (v1 == v2 && v2 == v3 && v1 == v3 && v1 == 16) {
+                window.alert("CONGRATULAZIONI !!\nHai beccatto la figura Malefica lunica che ti toglie crediti\n !!! HAI PERSO 150 CREDITI !!!");
+                ScrivoCrediti(MontePremi[v1]);               
+            }
+            f1.txtTotVincite.value = vincite;
+            ComantiDisabilitati(false);
+        }
+
+        //estraggo in maniera casuale FUNZIONE 2 DI 3
+        function Calcolo() {
+            if (sicurezza == false) {
+                i++;
+                var n = figure.length - 1;
+                if (moneta == 1) { n=n-7}
+                v1 = Math.round(n * Math.random());
+                v2 = Math.round(n * Math.random());
+                v3 = Math.round(n * Math.random());
+                CreaBody(v1, v2, v3);
+                if (i >= 100) { window.clearTimeout(time); i = 0; soldi(); }
+            }
+        }
+
+        //carico il valore delle paritte masime
+        function funMaxPartite(m) {
+            if (m < 5 || m > 1000 || isNaN(m)) {
+                window.alert('ERRORE : Valore inserinto non valido - Err5');
+                f1.txtmaxpartite.value = maxPartite;
+            } else {
+                alert('Valore impostato corettamente');
+                maxPartite = f1.txtmaxpartite.value;
+            }
+        }
+
+
+
+
+//            ........................LIBRERIE ......................
+
+
+        //Attivo o Disabilito i comandi per evitare di clicare mentre il progamma gira 
+        function ComantiDisabilitati(vf) {
+            if (vf == true) {    // Comdani DISATTIVATI
+                ScrivoElementi('spanLeva', '<input type="range" min="0" max="10" step="1" value="0"  name="leva" style="width:100%" disabled />');
+                ScrivoElementi('spanAvvia', '<input type="button" value="Avvia Partita"  class="TestoCentro" style="width:100%" disabled />');
+            } else {    // comandi ATTIVATI
+                ScrivoElementi('spanLeva', '<input type="range" min="0" max="10" step="1" value="0"  name="leva" onchange="giro()" style="width:100%" />');
+              ScrivoElementi('spanAvvia', '<input type="button" value="Avvia Partita" onclick="giro()" class="TestoCentro" style="width:100%" />');
+            }
+        }
+
+      
+        function playAudio(file){
+            if (f1.audio.checked == true) {
+                var ua = window.navigator.userAgent
+                var msie = ua.indexOf("MSIE ")
+                //Se è IE avvio audio in una maniera
+                if (msie > 0) {
+                    var thissound = document.getElementById(file+'.mp3');
+                    thissound.currentTime = 0;
+                    thissound.Play();
+                } else {
+                    playlist[file].play()
+                }
+            }
+        }
+
+        function ScrivoCrediti(valore) {
+            crediti = crediti + valore;
+            f1.txt_crediti.value = crediti;
+            if (crediti <= 0 || isNaN(crediti)) {
+                window.alert("Soldi Finiti");
+                err('GAME OVER', 'Err6');
+            }
+        }
+
+        function stop() {   // sistema che blocca cliclo quando va in forma infinita
+            sicurezza = true;
+            window.alert('Il programma è stato arrestao, ora vierra riaviato\nNB:Alcuni dati verrano persi');
+            location.reload();
+        }
+
+        function err(testo, iderr) {
+            if (testo == '' || iderr=='') {
+                window.alert('!! ERROR SYS !!\nSi e verificato un errore in : js err \nUn paramtero risulta non coretto');
+                err('Errore di sistema', 'Err9');
+            }
+            else {
+                playAudio('perdi');
+                document.body.style.backgroundColor = "red";
+                document.write('<h1  style="text-align:center;">!! ' + testo + ' !!</h1>');
+                document.write('<h2 style="text-align:center;"><a href="index.html">Gioca di nuovo</a></h2>');
+                document.write('<div style="text-align:center;">Codice Errrore : <a href="help.html#' + iderr + '">' + iderr + '</a></div>');
+            }
+        }
+
+        function CreaBody(c1,c2,c3) {
+            var s = '<table border="0" style="width:100%"><tr>';
+
+            if (f1.riga.checked == true) {
+                var a = c1, b = c2, c = c3;
+                if ((a - 1) < 0) { a = (figure.length-1); } else { a = a - 1; }
+                if ((b - 1) < 0) { b = (figure.length-1); } else { b = b - 1; }
+                if ((c - 1) < 0) { c = (figure.length-1); } else { c = c - 1; }
+
+                s = s + '<td><center> <img src="' + figure[a] + '" height="32px" width="32px" /></center></td>';
+                s = s + '<td><center> <img src="' + figure[b] + '" height="32px" width="32px" /></center></td>';
+                s = s + '<td><center> <img src="' + figure[c] + '" height="32px" width="32px" /></center></td>';
+            }
+
+
+            s = s + '</tr><tr>';
+            s = s + '<td style="border:3px solid red;"><center>- <img src="' + figure[c1] + '" height="32px" width="32px" />-</center></td>';
+            s = s + '<td style="border:3px solid red;"><center>- <img src="' + figure[c2] + '" height="32px" width="32px" />-</center></td>';
+            s = s + '<td style="border:3px solid red;"><center>- <img src="' + figure[c3] + '" height="32px" width="32px" />-</center></td>';
+            s = s + '</tr><tr>';
+
+            if (f1.riga.checked == true) {
+                var a = c1, b = c2, c = c3;
+                if ((a + 1) > (figure.length - 1)) { a = 0; } else { a = a + 1; }
+                if ((b + 1) > (figure.length - 1)) { b = 0; } else { b = b + 1; }
+                if ((c + 1) > (figure.length - 1)) { c = 0; } else { c = c + 1; }
+                s = s + '<td><center> <img src="' + figure[a] + '" height="32px" width="32px" /></center></td>';
+                s = s + '<td><center> <img src="' + figure[b] + '" height="32px" width="32px" /></center></td>';
+                s = s + '<td><center> <img src="' + figure[c] + '" height="32px" width="32px" /></center></td>';
+            }
+            s = s + '</tr></table>';
+            ScrivoElementi('risultati',s)
+            s = ''; 
+        }
+
+        function Cheke(IdElemento) {
+            if (document.getElementById(IdElemento).checked == true) {
+                document.getElementById(IdElemento).checked = false;
+            } else {
+                document.getElementById(IdElemento).checked = true;
+            }
+        }
+
+    </script>
+</head>
+<body onload="boot()">
+    <form name="f1" id="f1">
+        <embed src="beep.mp3" autostart="false" width="0" height="0" id="emBepp" enablejavascript="true">
+        <embed src="vincita.mp3" autostart="false" width="0" height="0" id="emVincita" enablejavascript="true">
+        <embed src="perdi.mp3"  autostart="false" width="0" height="0" id="emPerdi" enablejavascript="true">
+    <div id="container_center">
+        <h1 style="text-align:center">Slot Machine</h1>
+        <div style="width:100%">
+            <div style="width:30%; float:left"><a href="help.html">(?) - Help</a></div>
+            <div style="text-align:right; width:60%; float:right;">Crediti : <input type="text" name="txt_crediti" readonly="readonly" style="text-align:center;" /></div>
+        </div>
+        <br />
+        <hr />
+
+        <div id="risultati">Caricamento in corso ...</div>
+
+        <br />
+        Per Iniziare tira la levetta da sinistra a destra:<br />
+            <span id="spanLeva">--|-------</span>
+        <br /><br />
+
+        <table style="width:100%">
+            <tr>
+                <th>Partite</th>
+                <td>
+                    <input type="text" name="txtPartita" disabled class="TestoCentro" />
+                </td>
+                <td id="spanAvvia">
+                    [ AVVIA ]
+                </td>
+            </tr>
+            <tr>
+                <th>TOT Vincite</th>
+                <td><input type="text"  name="txtTotVincite" disabled class="TestoCentro" /></td>
+                <td><input type="button" value="RIAVIA" onclick="stop()" style="width:100%; background-color:red; color:white" /></td>
+            </tr>
+        </table>
+        <br />
+        <fieldset>
+            <legend>Impostazioni</legend>
+            <input type="checkbox" name="audio" id="ChekAudio" onclick="alert('Attenzione: funzione non suportata da tutti i sistemi se il gioco non fuziona diasattivare questa opzione')"/> 
+                <span onclick="Cheke('ChekAudio')"  style="cursor: pointer;"> Attiva / Disativa audio </span><br />
+            <input type="checkbox" name="riga" id="ChekRiga" /> 
+                <span onclick="Cheke('ChekRiga')"  style="cursor: pointer;"> Visualizza 3 rige </span> <br />
+            <input type="checkbox" name="vincitaPuls" id="ChekPluss" /> 
+               <span onclick="Cheke('ChekPluss')" style="cursor: pointer;">Vincita Plus</span>  
+            <br />
+            <input type="number" max="1000" min="1" value="100" style="width:60px;" name="txtmaxpartite" onchange="funMaxPartite(value)"/> Partite massime
+        </fieldset>
+        <img src="aams.png" /><br />
+        <div id="DivUpDate">
+            <script type="text/javascript">
+                ljsUpDate('DivUpDate');
+            </script>
+        </div>
+    </div>
+        
+    </form>  
+    
+</body>
+</html>
